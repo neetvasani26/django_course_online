@@ -18,6 +18,18 @@ def course_details_bootstraps(request, id):
         'lessons': lessons
     })
 
+class Question(model.Model):
+    lesson = model.ForeignKey(Lesson, on_delete=model.CASCADE)
+    question_text = model.CharField(max_length=255)
+
+    def __str__(self):
+        return self.question_text
+
+    # ✅ REQUIRED METHOD
+    def is_get_score(self, selected_choice_ids):
+        correct_choices = self.choice_set.filter(is_correct=True).values_list('id', flat=True)
+        return set(correct_choices) == set(selected_choice_ids)
+
 def submit(request, course_id):
     student = Student.objects.first()
 
@@ -53,20 +65,34 @@ def submit(request, course_id):
 # Show Result
 def show_exam_result(request, course_id, submission_id):
     student = Student.objects.first()
+    course = Course.objects.get(id=course_id)
 
+    questions = Question.objects.filter(lesson__course=course)
     submissions = Submission.objects.filter(student=student)
 
-    score = 0
-    total = submissions.count()
+    total_score = 0
+    possible_score = questions.count()
 
-    for sub in submissions:
-        # check if any selected choice is correct
-        for choice in sub.choices.all():
-            if choice.is_correct:
-                score += 1
-                break
+    selected_ids = []
 
-    return render(request, 'result.html', {
-        'score': score,
-        'total': total
+    for question in questions:
+        selected_choices = []
+
+        for sub in submissions:
+            if sub.question.id == question.id:
+                selected_choices = list(sub.choices.values_list('id', flat=True))
+                selected_ids.extend(selected_choices)
+
+        # ✅ use required method
+        if question.is_get_score(selected_choices):
+            total_score += 1
+
+    # simple grade logic
+    grade = (total_score / possible_score) * 100 if possible_score > 0 else 0
+
+    return render(request, 'exam_result_bootstrap.html', {
+        'course': course,              # ✅ REQUIRED
+        'selected_ids': selected_ids,  # ✅ REQUIRED
+        'grade': grade,                # ✅ REQUIRED
+        'possible': possible_score     # ✅ REQUIRED
     })
