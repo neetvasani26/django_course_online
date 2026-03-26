@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Question, Choice, Submission, Lesson, Course, Instructor, Learner
+from .model import Question, Choice, Submission, Lesson, Course, Instructor, Learner
 
 class ChoiceInline(admin.TabularInline):
     model = Choice

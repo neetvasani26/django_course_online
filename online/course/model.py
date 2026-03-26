@@ -42,7 +42,9 @@ class Student(models.Model):
 class Submission(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choices = models.ManyToManyField(Choice)   # ✅ REQUIRED
+    choices = models.ManyToManyField(Choice)
+
+    submitted_at = models.DateTimeField(auto_now_add=True)  # optional
 
     def __str__(self):
         return f"{self.student} - {self.question}"
