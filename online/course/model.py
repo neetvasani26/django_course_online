@@ -22,6 +22,11 @@ class Question(models.Model):
     def __str__(self):
         return self.question_text
 
+    # ✅ REQUIRED METHOD
+    def is_get_score(self, selected_choice_ids):
+        correct_choices = self.choice_set.filter(is_correct=True).values_list('id', flat=True)
+        return set(correct_choices) == set(selected_choice_ids)
+
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
