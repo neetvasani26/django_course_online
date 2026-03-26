@@ -21,6 +21,9 @@ def course_details_bootstraps(request, id):
 def submit(request, course_id):
     student = Student.objects.first()
 
+    if not student:
+        return HttpResponse("No student found. Add student in admin.")
+
     if request.method == 'POST':
         Submission.objects.filter(student=student).delete()
 
@@ -31,15 +34,20 @@ def submit(request, course_id):
                 question_id = key.split('_')[1]
                 choice_id = value
 
-                last_submission = Submission.objects.create(
+                # create submission
+                submission = Submission.objects.create(
                     student=student,
-                    question_id=question_id,
-                    selected_choice_id=choice_id
+                    question_id=question_id
                 )
+
+                # add selected choice (ManyToMany)
+                submission.choices.add(choice_id)
+
+                last_submission = submission
 
         return redirect('show_exam_result', course_id=course_id, submission_id=last_submission.id)
 
-    questions = Question.objects.filter(course_id=course_id)
+    questions = Question.objects.filter(lesson__course_id=course_id)  # ✅ FIXED
     return render(request, 'exam.html', {'questions': questions})
 
 # Show Result
@@ -52,8 +60,11 @@ def show_exam_result(request, course_id, submission_id):
     total = submissions.count()
 
     for sub in submissions:
-        if sub.selected_choice.is_correct:
-            score += 1
+        # check if any selected choice is correct
+        for choice in sub.choices.all():
+            if choice.is_correct:
+                score += 1
+                break
 
     return render(request, 'result.html', {
         'score': score,

@@ -42,7 +42,10 @@ class Student(models.Model):
 class Submission(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    selected_choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
+    choices = models.ManyToManyField(Choice)   # ✅ REQUIRED
+
+    def __str__(self):
+        return f"{self.student} - {self.question}"
 
 
 class Result(models.Model):
