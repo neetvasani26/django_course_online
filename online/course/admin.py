@@ -14,11 +14,13 @@ class QuestionInline(admin.TabularInline):
 class QuestionAdmin(admin.ModelAdmin):
     inlines = [ChoiceInline]
     list_display = ('id', 'question_text')
+    search_fields = ('question_text',)
 
 
 class LessonAdmin(admin.ModelAdmin):
     inlines = [QuestionInline]
     list_display = ('id', 'lesson_name')
+    search_fields = ('lesson_name',)
 
 
 admin.site.register(Question, QuestionAdmin)
