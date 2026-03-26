@@ -6,10 +6,10 @@ from .model import Course, Lesson, Submission, Question, Student
 def home(request):
     return HttpResponse("Home Page")
 
-def course_details_bootstrap(request):
-    return HttpResponse("course_details_bootstrap Page")
+# def course_details_bootstrap(request):
+#     return HttpResponse("course_details_bootstrap Page")
 
-def course_detail(request, id):
+def course_details_bootstraps(request, id):
     course = Course.objects.get(id=id)
     lessons = Lesson.objects.filter(course=course)
 
@@ -18,31 +18,32 @@ def course_detail(request, id):
         'lessons': lessons
     })
 
-def submit(request):
-    if request.method == 'POST':
-        student = Student.objects.first()
+def submit(request, course_id):
+    student = Student.objects.first()
 
-        # 🧹 Clear old submissions (IMPORTANT)
+    if request.method == 'POST':
         Submission.objects.filter(student=student).delete()
+
+        last_submission = None
 
         for key, value in request.POST.items():
             if key.startswith('question_'):
                 question_id = key.split('_')[1]
                 choice_id = value
 
-                Submission.objects.create(
+                last_submission = Submission.objects.create(
                     student=student,
                     question_id=question_id,
                     selected_choice_id=choice_id
                 )
 
-        return redirect('show_result')
+        return redirect('show_result', course_id=course_id, submission_id=last_submission.id)
 
-    questions = Question.objects.all()
+    questions = Question.objects.filter(course_id=course_id)
     return render(request, 'exam.html', {'questions': questions})
 
 # Show Result
-def show_exam_result(request):
+def show_exam_result(request, course_id, submission_id):
     student = Student.objects.first()
 
     submissions = Submission.objects.filter(student=student)
